@@ -217,7 +217,7 @@ MCP 클라이언트는 대화 에이전트 설정과 무관하게 `/api/mcp/nave
 scripts/develop
 ```
 
-HA는 컨테이너 안에서 8123 포트를 사용하며, 호스트 네트워크의 운영 HA와 구분되도록 컨테이너 호스트명은 `hacs-naver-map-dev`입니다. 린트와 테스트는 `scripts/test`로 실행합니다.
+HA는 컨테이너 안에서 8123 포트를 사용하며, 호스트 네트워크의 운영 HA와 구분되도록 컨테이너 호스트명은 `ha-naver-map-dev`입니다. 린트와 테스트는 `scripts/test`로 실행합니다.
 
 ## 라이선스
 

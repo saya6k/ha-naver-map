@@ -13,10 +13,10 @@
     "http",
     "panel_custom"
   ],
-  "documentation": "https://github.com/saya6k/hacs-naver-map",
+  "documentation": "https://github.com/saya6k/ha-naver-map",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/saya6k/hacs-naver-map/issues",
+  "issue_tracker": "https://github.com/saya6k/ha-naver-map/issues",
   "loggers": [
     "custom_components.naver_map"
   ],
