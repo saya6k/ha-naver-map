@@ -56,6 +56,17 @@ NCP Maps is a paid service with a monthly free quota (e.g. Directions 5: 60,000 
 
 Adding the integration puts a **Naver Map** entry in the sidebar (all users, not only admins). It has three tabs.
 
+<table>
+  <tr>
+    <th>Places</th>
+    <th>Directions</th>
+  </tr>
+  <tr>
+    <td width="50%"><img src="https://raw.githubusercontent.com/saya6k/hacs-naver-map/main/docs/images/panel-place.png" alt="Places tab: search results for 경복궁 with the selected place's photos, opening status, review counts and Origin / Destination / Save buttons, marked on the map"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/saya6k/hacs-naver-map/main/docs/images/panel-transit.png" alt="Directions tab: transit routes from home to 경복궁 with times, fare, the line-colored ride bar and live arrivals, and the route line drawn on the map"></td>
+  </tr>
+</table>
+
 The panel opens on the map alone: tap a tab to open it, and tap the open tab again to fold it away (the map keeps what it shows, e.g. a route line). On phone widths the tab opens as a bottom sheet just tall enough for its controls, grows when results arrive, and can be dragged taller, or down to fold it; on tablets and desktops it opens as a side panel next to the map.
 
 **Places** — search a place, or tap a category (restaurants, cafes, convenience stores, pharmacies, …) to list places within 1 km of you (your person's location, else home); every result is marked on the map with its distance. Pick a result to zoom to it and see its Naver Place summary (photos, opening status, review counts, booking/order availability), open it in Naver Map, or send it to the **Directions** tab with **Origin** / **Destination**.
