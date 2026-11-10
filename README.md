@@ -28,7 +28,7 @@ Naver Map for Home Assistant — **place search**, **nearby search**, **geocodin
 
 ## Installation (HACS)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=saya6k&repository=hacs-naver-map&category=integration)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=saya6k&repository=ha-naver-map&category=integration)
 
 1. HACS → Integrations → ⋮ → **Custom repositories** — add this repo URL with category **Integration**.
 2. Install **Naver Map**.
@@ -62,8 +62,8 @@ Adding the integration puts a **Naver Map** entry in the sidebar (all users, not
     <th>Directions</th>
   </tr>
   <tr>
-    <td width="50%"><img src="https://raw.githubusercontent.com/saya6k/hacs-naver-map/main/docs/images/panel-place.png" alt="Places tab: search results for 경복궁 with the selected place's photos, opening status, review counts and Origin / Destination / Save buttons, marked on the map"></td>
-    <td width="50%"><img src="https://raw.githubusercontent.com/saya6k/hacs-naver-map/main/docs/images/panel-transit.png" alt="Directions tab: transit routes from home to 경복궁 with times, fare, the line-colored ride bar and live arrivals, and the route line drawn on the map"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/saya6k/ha-naver-map/main/docs/images/panel-place.png" alt="Places tab: search results for 경복궁 with the selected place's photos, opening status, review counts and Origin / Destination / Save buttons, marked on the map"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/saya6k/ha-naver-map/main/docs/images/panel-transit.png" alt="Directions tab: transit routes from home to 경복궁 with times, fare, the line-colored ride bar and live arrivals, and the route line drawn on the map"></td>
   </tr>
 </table>
 
@@ -236,7 +236,7 @@ A devcontainer is provided for testing against a real Home Assistant install. Op
 scripts/develop
 ```
 
-HA binds port 8123 inside the container, whose hostname is `hacs-naver-map-dev` so it's distinguishable from any production HA on the host network. Run the lint + test suite with `scripts/test`.
+HA binds port 8123 inside the container, whose hostname is `ha-naver-map-dev` so it's distinguishable from any production HA on the host network. Run the lint + test suite with `scripts/test`.
 
 ## License
 
