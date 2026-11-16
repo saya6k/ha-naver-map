@@ -22,8 +22,8 @@ Naver Map for Home Assistant — **place search**, **nearby search**, **geocodin
 
 ## Installation (HACS)
 
-1. HACS → Integrations → ⋮ → **Custom repositories** — add this repo URL with category **Integration**.
-2. Install **Naver Map**.
+1. HACS → search for **Naver Map**.
+2. Install it.
 3. Restart Home Assistant.
 4. Settings → Devices & Services → **Add integration** → search "Naver Map".
 5. Enter both credential pairs (see [Configuration](#configuration)). Each pair is validated with one call.

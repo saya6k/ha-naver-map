@@ -23,8 +23,8 @@ NAVER Cloud Platform Maps와 네이버 지도 웹/내부 API로 **장소 검색*
 
 ## 설치 (HACS)
 
-1. HACS → 통합 → ⋮ → **사용자 지정 저장소** — 이 저장소 URL을 카테고리 **Integration**으로 추가.
-2. **Naver Map** 설치.
+1. HACS → **Naver Map** 검색.
+2. 설치.
 3. Home Assistant 재시작.
 4. 설정 → 기기 및 서비스 → **통합 추가** → "Naver Map" 검색.
 5. 두 종류의 인증 정보를 입력([설정](#설정) 참고). 각각 1회 호출로 검증합니다.
