@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 from homeassistant.components.frontend import DATA_PANELS
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import llm
 from homeassistant.loader import async_get_integration
 
 from custom_components.naver_map.const import DOMAIN
@@ -99,3 +103,20 @@ async def test_reload_entry_keeps_single_panel(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert "naver-map" in hass.data[DATA_PANELS]
+
+
+async def test_setup_retry_after_panel_failure(hass: HomeAssistant) -> None:
+    """A setup that fails on the panel leaves nothing registered, so a retry succeeds."""
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.naver_map.async_register_panel",
+        side_effect=HomeAssistantError("panel failed"),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert [api.id for api in llm.async_get_apis(hass)].count(DOMAIN) == 1

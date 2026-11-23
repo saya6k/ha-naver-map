@@ -58,6 +58,7 @@ const NEARBY_CATEGORIES = {
 const NEARBY_RADIUS = 1000; // m
 const MAX_PHOTOS = 3;
 const ENTITY_DOMAINS = ["person", "zone", "device_tracker"];
+const ENTITY_PREFIXES = ENTITY_DOMAINS.map((domain) => `${domain}.`);
 const REQUERY_DELAY = 800; // ms; marker drags re-query Directions 5, a paid API
 const COMPACT_WIDTH = 600; // px of panel width; below this the phone layout is used
 const COLORS = {
@@ -736,16 +737,24 @@ class NaverMapPanel extends HTMLElement {
     ];
   }
 
-  // person/zone/device_tracker states that carry coordinates.
+  // person/zone/device_tracker states that carry coordinates. hass.states is a
+  // new object on every state change, so it is scanned once per change and the
+  // result shared by every caller (the hass setter and each render use it).
   _locatedEntities() {
-    return Object.values(this._hass?.states || {})
-      .filter(
-        (s) =>
-          ENTITY_DOMAINS.includes(s.entity_id.split(".")[0]) &&
-          typeof s.attributes.latitude === "number" &&
-          typeof s.attributes.longitude === "number"
-      )
-      .sort((a, b) => a.entity_id.localeCompare(b.entity_id));
+    const states = this._hass?.states || {};
+    if (this._located?.states !== states) {
+      const list = [];
+      for (const id in states) {
+        if (!ENTITY_PREFIXES.some((prefix) => id.startsWith(prefix))) continue;
+        const s = states[id];
+        if (typeof s.attributes.latitude === "number" && typeof s.attributes.longitude === "number") {
+          list.push(s);
+        }
+      }
+      list.sort((a, b) => a.entity_id.localeCompare(b.entity_id));
+      this._located = { states, list };
+    }
+    return this._located.list;
   }
 
   _syncMapEntities() {
@@ -851,18 +860,18 @@ class NaverMapPanel extends HTMLElement {
 
   // Zones with coordinates: home first, then the rest by name.
   _savedZones() {
-    return Object.values(this._hass?.states || {})
-      .filter(
-        (s) =>
-          s.entity_id.startsWith("zone.") &&
-          typeof s.attributes.latitude === "number" &&
-          typeof s.attributes.longitude === "number"
-      )
-      .sort(
-        (a, b) =>
-          (b.entity_id === "zone.home") - (a.entity_id === "zone.home") ||
-          (a.attributes.friendly_name || "").localeCompare(b.attributes.friendly_name || "")
-      );
+    const located = this._locatedEntities();
+    if (this._zones?.located !== located) {
+      const list = located
+        .filter((s) => s.entity_id.startsWith("zone."))
+        .sort(
+          (a, b) =>
+            (b.entity_id === "zone.home") - (a.entity_id === "zone.home") ||
+            (a.attributes.friendly_name || "").localeCompare(b.attributes.friendly_name || "")
+        );
+      this._zones = { located, list };
+    }
+    return this._zones.list;
   }
 
   _savedZoneFor(place) {

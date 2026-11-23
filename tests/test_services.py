@@ -312,6 +312,39 @@ async def test_get_directions_transit_adds_transfers_and_fare(
     assert response["route_url"].endswith("/transit")
 
 
+async def test_get_directions_transit_arrival_follows_the_schedule(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A transit route leaving later than now arrives at its scheduled time, not now + duration."""
+    aioclient_mock.get(
+        TRANSIT_ROUTE_URL,
+        json={
+            "paths": [
+                {
+                    "duration": 50,
+                    "distance": 24700,
+                    "fare": 3200,
+                    "transferCount": 0,
+                    "departureTime": "2099-01-01T05:30:00",
+                    "arrivalTime": "2099-01-01T06:20:00",
+                }
+            ]
+        },
+    )
+
+    response = await _call(
+        hass,
+        "get_directions",
+        {
+            "origin": {"latitude": 37.5665, "longitude": 126.978},
+            "destination": {"latitude": 37.3945, "longitude": 127.1112},
+            "mode": "transit",
+        },
+    )
+
+    assert response["arrival_time"] == "2099-01-01T06:20:00+09:00"
+
+
 async def test_get_directions_transit_rejects_waypoints(hass: HomeAssistant) -> None:
     """Transit mode does not accept waypoints."""
     with pytest.raises(ServiceValidationError) as err:

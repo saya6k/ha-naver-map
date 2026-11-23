@@ -384,9 +384,7 @@ async def async_get_directions(
         "mode": mode,
         "duration": route.duration if route else None,
         "distance": route.distance if route else None,
-        "arrival_time": (
-            (dt_util.now() + timedelta(seconds=route.duration)).isoformat() if route else None
-        ),
+        "arrival_time": _arrival_time(route),
         "legs": legs,
     }
     if isinstance(route, TransitResult):
@@ -400,6 +398,19 @@ async def async_get_directions(
             else None
         )
     return response
+
+
+def _arrival_time(route: RouteResult | TransitResult | None) -> str | None:
+    """When the route arrives: a transit route's own schedule, else now plus its duration.
+
+    A transit route can leave later than now (e.g. at night, on the first
+    train), so its scheduled arrival beats now + duration.
+    """
+    if route is None:
+        return None
+    if isinstance(route, TransitResult) and route.arrival_time:
+        return route.arrival_time
+    return (dt_util.now() + timedelta(seconds=route.duration)).isoformat()
 
 
 def _route_extras(
