@@ -109,6 +109,9 @@ const STRINGS = {
     remove: "Remove",
     confirmRemove: "Tap again to remove",
     savedEmpty: "Save places from the Places tab with ☆ Save.",
+    savedLoadFailed: "Couldn't load your saved places.",
+    savedNotLoaded: "Saved places aren't loaded yet; try again in a moment.",
+    retry: "Retry",
     edit: "Edit",
     done: "Done",
     newFolder: "New folder",
@@ -209,6 +212,9 @@ const STRINGS = {
     remove: "삭제",
     confirmRemove: "한 번 더 누르면 삭제",
     savedEmpty: "장소 검색에서 ☆ 저장을 누르면 여기에 모입니다.",
+    savedLoadFailed: "저장한 장소를 불러오지 못했습니다.",
+    savedNotLoaded: "저장한 장소를 아직 불러오지 못했습니다. 잠시 후 다시 시도하세요.",
+    retry: "다시 시도",
     edit: "편집",
     done: "완료",
     newFolder: "새 폴더",
@@ -421,6 +427,7 @@ class NaverMapPanel extends HTMLElement {
     this._realtime = {}; // get_transit_arrivals results by boarding stop
     this._confirmRemove = null; // saved node id waiting for a second tap
     this._saved = null; // favorites tree from user data; null until loaded
+    this._savedLoadFailed = false; // the last load failed; _saved stays null
     this._editing = false;
     this._activeSaved = null; // saved favorite whose details are shown
     this._drag = null;
@@ -869,13 +876,16 @@ class NaverMapPanel extends HTMLElement {
 
   // --- favorites tree ------------------------------------------------------
 
+  // A failed load leaves _saved null (not empty): writing a tree built from
+  // nothing would replace the user's stored favorites.
   async _loadSaved() {
+    this._savedLoadFailed = false;
     try {
       const result = await this._hass.callWS({ type: "frontend/get_user_data", key: SAVED_KEY });
       this._saved = result?.value?.tree || [];
     } catch (err) {
       console.warn("[naver-map-panel] could not load saved places:", err);
-      this._saved = [];
+      this._savedLoadFailed = true;
     }
     if (this._tab !== "route") {
       this._render();
@@ -912,6 +922,12 @@ class NaverMapPanel extends HTMLElement {
 
   // Apply an edit to the (reconciled) tree and write it to the user's data.
   _updateSaved(mutate) {
+    // Until the stored tree has loaded, an edit would overwrite it.
+    if (this._saved === null) {
+      this._error = this._t.savedNotLoaded;
+      this._render();
+      return;
+    }
     const tree = structuredClone(this._savedTree());
     mutate(tree);
     this._saved = tree;
@@ -1225,6 +1241,11 @@ class NaverMapPanel extends HTMLElement {
         break;
       case "saved-zone":
         this._favoriteToZone(el.dataset.id);
+        break;
+      case "saved-retry":
+        this._error = null;
+        this._render();
+        this._loadSaved();
         break;
       case "saved-edit":
         this._editing = !this._editing;
@@ -1672,7 +1693,12 @@ class NaverMapPanel extends HTMLElement {
 
   _renderSavedTab() {
     const t = this._t;
-    if (this._saved === null) return `<p class="muted">…</p>`;
+    if (this._saved === null) {
+      return this._savedLoadFailed
+        ? `<p class="error">${t.savedLoadFailed}</p>
+           <button class="chip" data-action="saved-retry">${t.retry}</button>`
+        : `<p class="muted">…</p>`;
+    }
     const tree = this._savedTree();
     const folders = tree.filter((n) => n.kind === "folder");
     const editing = this._editing;

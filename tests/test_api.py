@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
@@ -768,3 +769,59 @@ async def test_driving_routes_merge_the_same_route_despite_timing_noise(
     routes = await _maps_api(hass).async_get_driving_routes(ORIGIN, DESTINATION, [])
 
     assert [r.labels for r in routes] == [("best", "toll_free")]
+
+
+class _StalledBodyResponse(AiohttpClientMockResponse):
+    """Headers arrive at once; the body never does."""
+
+    async def json(self, *args, **kwargs):
+        await asyncio.Event().wait()
+
+
+async def _stalled_body(method, url, data):
+    return _StalledBodyResponse(method, url)
+
+
+async def _within(awaitable, seconds: float = 2):
+    """Await under a bound that fails the test (instead of raising TimeoutError) if hit."""
+    task = asyncio.ensure_future(awaitable)
+    done, _ = await asyncio.wait({task}, timeout=seconds)
+    if not done:
+        task.cancel()
+        pytest.fail("the request hung past its timeout")
+    return task.result()
+
+
+@pytest.mark.parametrize(
+    "lookup",
+    [
+        pytest.param(lambda hass: _maps_api(hass).async_geocode("판교역로 4"), id="ncp"),
+        pytest.param(
+            lambda hass: _place_api(hass).async_instant_search("스타벅스", 37.5, 127.0), id="web"
+        ),
+    ],
+)
+async def test_stalled_body_times_out(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, lookup
+) -> None:
+    """The request timeout covers reading the body, not only the headers."""
+    aioclient_mock.get(GEOCODE_URL, side_effect=_stalled_body)
+    aioclient_mock.get(INSTANT_SEARCH_URL, side_effect=_stalled_body)
+
+    with (
+        patch("custom_components.naver_map.api._REQUEST_TIMEOUT", 0.01, create=True),
+        pytest.raises(TimeoutError),
+    ):
+        await _within(lookup(hass))
+
+
+async def test_driving_stalled_body_degrades_to_no_routes(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A driving answer whose body stalls times out into "no routes"."""
+    aioclient_mock.get(DRIVING_URL, side_effect=_stalled_body)
+
+    with patch("custom_components.naver_map.api._REQUEST_TIMEOUT", 0.01, create=True):
+        routes = await _within(_maps_api(hass).async_get_driving_routes(ORIGIN, DESTINATION, []))
+
+    assert routes == []
