@@ -193,7 +193,7 @@ See `custom_components/naver_map/services.yaml` for all fields.
 
 ## Assist support
 
-The same actions are also registered as an LLM tool API (`naver_map__search_place`, `naver_map__search_nearby`, `naver_map__geocode_address`, `naver_map__get_directions`, `naver_map__get_place_details`, plus `naver_map__get_saved_places` for the requesting user's saved places from the panel — so "how long to my favorite cafe?" works), so an AI-backed Assist pipeline (e.g. Google Generative AI Conversation, OpenAI Conversation) can call them from natural language. Enable it in the conversation agent's options by selecting **Naver Map** under the exposed LLM APIs. Place and nearby-search results also render as visual cards on cards-capable Assist surfaces (e.g. voice-satellite dashboards).
+The same actions are also registered as an LLM tool API (`naver_map__search_place`, `naver_map__search_nearby`, `naver_map__geocode_address`, `naver_map__get_directions`, `naver_map__get_place_details`, plus `naver_map__get_saved_places` for the requesting user's saved places from the panel — so "how long to my favorite cafe?" works), so an AI-backed Assist pipeline (e.g. Google Generative AI Conversation, OpenAI Conversation) can call them from natural language. Enable it in the conversation agent's options by selecting **Naver Map** under the exposed LLM APIs. Results also render as visual cards (places, nearby places, place details, address, route, saved places) on cards-capable Assist surfaces (e.g. voice-satellite dashboards).
 
 Saved places are per Home Assistant user, so `naver_map__get_saved_places` returns nothing for requests without a signed-in user, such as voice satellites; zones still work there as entities.
 

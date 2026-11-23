@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+
 import pytest
 from homeassistant.components.frontend.storage import async_user_store
 from homeassistant.core import Context, HomeAssistant
@@ -16,6 +18,7 @@ from custom_components.naver_map.const import (
     INSTANT_SEARCH_URL,
     PLACE_SUMMARY_URL,
 )
+from custom_components.naver_map.llm.directions_tool import _route_card
 from tests.const import (
     ADDRESS_ITEM,
     ENTRY_DATA,
@@ -34,6 +37,13 @@ async def _setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return entry
+
+
+def _svg_text(data_url: str) -> str:
+    """Decode a data:image/svg+xml;base64 URL to its SVG source."""
+    prefix = "data:image/svg+xml;base64,"
+    assert data_url.startswith(prefix)
+    return base64.b64decode(data_url.removeprefix(prefix)).decode()
 
 
 def _llm_context(user_id: str | None = None) -> llm.LLMContext:
@@ -210,6 +220,7 @@ async def test_get_directions_tool_builds_route(
     assert result.data["mode"] == "car"
     assert result.data["duration"] is None
     assert result.data["route_url"].startswith("https://map.naver.com/p/directions/")
+    assert "확인 불가" in _svg_text(result.data["featured_image"])
 
 
 async def test_get_directions_tool_never_returns_geometry(
@@ -245,6 +256,9 @@ async def test_get_directions_tool_never_returns_geometry(
     )
 
     assert result.data["duration"] == 600
+    card = _svg_text(result.data["featured_image"])
+    assert "10분" in card
+    assert "4.2km" in card
     assert "geometry" not in result.data
     assert "steps" not in result.data
     assert "alternatives" not in result.data
@@ -357,6 +371,9 @@ async def test_saved_places_tool_lists_the_users_favorites(hass: HomeAssistant) 
         },
         {"name": "을지로 노가리골목", "folder": None, "latitude": 37.567, "longitude": 126.99},
     ]
+    card = _svg_text(result.data["featured_image"])
+    assert "3곳" in card
+    assert "회사" in card
 
 
 async def test_saved_places_tool_filters_by_name_or_folder(hass: HomeAssistant) -> None:
@@ -387,6 +404,7 @@ async def test_saved_places_tool_is_per_user(hass: HomeAssistant) -> None:
             llm.ToolInput(tool_name="naver_map__get_saved_places", tool_args={})
         )
         assert result.data["places"] == []
+        assert "featured_image" not in result.data
 
 
 async def test_place_details_tool_returns_summary(
@@ -425,3 +443,24 @@ async def test_search_place_tool_ranks_around_near(
 
     assert result.data["places"][0]["place_name"] == "스타벅스 강남R점"
     assert aioclient_mock.mock_calls[0][1].query["coords"] == "37.4979,127.0276"
+
+
+def test_route_card_shows_transit_transfers_and_fare() -> None:
+    """A transit route's card carries its transfers and fare."""
+    card = _svg_text(
+        _route_card(
+            {
+                "mode": "transit",
+                "duration": 3900,
+                "distance": 850,
+                "arrival_time": "2026-11-23T18:05:00+09:00",
+                "transfers": 1,
+                "fare": 1500,
+                "legs": [{"from": "집", "to": "경복궁"}],
+            }
+        )
+    )
+
+    expected = ("집 → 경복궁", "대중교통", "1시간 5분", "18:05 도착 예정", "850m", "1회", "1,500원")
+    for text in expected:
+        assert text in card
