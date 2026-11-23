@@ -32,6 +32,9 @@ from .helpers import ResolvedPoint
 
 _LOGGER = logging.getLogger(__name__)
 
+# Seconds for a whole request, response body included.
+_REQUEST_TIMEOUT = 10
+
 # Any of these means a route lookup could not be read; the ETA fields degrade
 # to null while the route link is still returned.
 _ROUTE_ERRORS = (
@@ -59,12 +62,15 @@ async def _async_get_json(
     headers: dict[str, str],
 ) -> Any:
     """GET a JSON endpoint, mapping HTTP 401 to InvalidApiKey."""
-    async with asyncio.timeout(10):
-        resp = await session.get(url, params=params, headers=headers)
-    if resp.status == HTTPStatus.UNAUTHORIZED:
-        raise InvalidApiKey
-    resp.raise_for_status()
-    return await resp.json(content_type=None)
+    # The timeout covers the body too: HA's shared session has no total timeout.
+    async with (
+        asyncio.timeout(_REQUEST_TIMEOUT),
+        session.get(url, params=params, headers=headers) as resp,
+    ):
+        if resp.status == HTTPStatus.UNAUTHORIZED:
+            raise InvalidApiKey
+        resp.raise_for_status()
+        return await resp.json(content_type=None)
 
 
 # A route line as [lat, lng] points (WGS84), or None when it could not be read.
@@ -304,11 +310,13 @@ class NcpMapsApi:
         if waypoints:
             params["waypoints"] = "|".join(_coord(p) for p in waypoints)
         try:
-            async with asyncio.timeout(10):
-                resp = await self._session.get(DRIVING_URL, params=params, headers=self._headers)
             # Route failures (e.g. code 2 "not near a road") come back as HTTP 400
             # with a JSON body, so read the body before judging the status.
-            data = await resp.json(content_type=None)
+            async with (
+                asyncio.timeout(_REQUEST_TIMEOUT),
+                self._session.get(DRIVING_URL, params=params, headers=self._headers) as resp,
+            ):
+                data = await resp.json(content_type=None)
             if data.get("code") != 0:
                 raise ValueError(f"code={data.get('code')} {data.get('message')}")
             routes: dict[tuple[Any, ...], RouteResult] = {}
@@ -345,10 +353,12 @@ async def _async_get_web_json(
     session: aiohttp.ClientSession, url: str, params: dict[str, str]
 ) -> Any:
     """GET a map.naver.com internal endpoint with the browser-like headers it expects."""
-    async with asyncio.timeout(10):
-        resp = await session.get(url, params=params, headers=ROUTE_API_HEADERS)
-    resp.raise_for_status()
-    return await resp.json(content_type=None)
+    async with (
+        asyncio.timeout(_REQUEST_TIMEOUT),
+        session.get(url, params=params, headers=ROUTE_API_HEADERS) as resp,
+    ):
+        resp.raise_for_status()
+        return await resp.json(content_type=None)
 
 
 _PLACE_CACHE_SECONDS = 3600
