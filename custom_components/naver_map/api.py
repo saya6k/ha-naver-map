@@ -317,6 +317,8 @@ class NcpMapsApi:
                 self._session.get(DRIVING_URL, params=params, headers=self._headers) as resp,
             ):
                 data = await resp.json(content_type=None)
+            if not isinstance(data, dict):
+                raise TypeError(f"unexpected driving answer: {str(data)[:100]}")
             if data.get("code") != 0:
                 raise ValueError(f"code={data.get('code')} {data.get('message')}")
             routes: dict[tuple[Any, ...], RouteResult] = {}

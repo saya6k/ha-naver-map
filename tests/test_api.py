@@ -117,6 +117,7 @@ async def test_driving_route_parses_ms_duration_and_joins_waypoints(
         {"status": 401, "json": {"error": {"errorCode": "200"}}},
         {"exc": aiohttp.ClientError("boom")},
         {"exc": TimeoutError()},
+        {"json": ["not", "an", "object"]},
     ],
 )
 async def test_driving_route_failure_degrades_to_no_routes(

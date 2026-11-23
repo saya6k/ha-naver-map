@@ -24,6 +24,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Naver Map from a config entry."""
+    # First: if it raises, nothing below has been registered, so a retry starts clean.
+    await async_register_panel(hass)
     session = async_get_clientsession(hass)
     clients = NaverClients(
         maps=NcpMapsApi(session, entry.data[CONF_NCP_KEY_ID], entry.data[CONF_NCP_KEY]),
@@ -36,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "unregister_llm": unregister_llm,
     }
     async_setup_services(hass, clients)
-    await async_register_panel(hass)
     return True
 
 
