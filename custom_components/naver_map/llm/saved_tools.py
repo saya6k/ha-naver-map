@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -16,7 +18,7 @@ from custom_components.naver_map.services import (
 )
 
 from .base_tool import BaseNaverTool
-from .render import grid_results
+from .render import grid_results, svg_table
 from .schema import POINT_INPUT
 
 _PLACE_ACCENT = "#03c75a"
@@ -63,8 +65,35 @@ class GetSavedPlacesTool(BaseNaverTool):
         elif not places:
             instruction = "No saved place matched; say so."
         else:
-            instruction = "Pick the place the user means; don't read out every field."
+            instruction = (
+                "A card listing the places is already shown. Pick the place the "
+                "user means; don't read out every field."
+            )
+            return self.envelope(
+                places=places,
+                featured_image=_saved_places_card(places),
+                instruction=instruction,
+            )
         return self.envelope(places=places, instruction=instruction)
+
+
+# Rows shown on the card; the model still gets every place.
+_SAVED_CARD_ROWS = 10
+
+
+def _saved_places_card(places: list[dict[str, Any]]) -> str:
+    """An SVG table of the places (name, folder), capped at _SAVED_CARD_ROWS rows."""
+    shown = places[:_SAVED_CARD_ROWS]
+    subtitle = f"{len(places)}곳"
+    if len(places) > len(shown):
+        subtitle += f" 중 {len(shown)}곳 표시"
+    return svg_table(
+        "저장한 장소",
+        ["이름", "폴더"],
+        [[place["name"] or "", place["folder"] or "-"] for place in shown],
+        subtitle=subtitle,
+        accent=_PLACE_ACCENT,
+    )
 
 
 class GetPlaceDetailsTool(BaseNaverTool):
