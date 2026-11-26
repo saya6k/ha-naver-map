@@ -1,6 +1,6 @@
 # Naver Map — Home Assistant Integration
 
-> Requires Home Assistant **2026.10.0.dev202609290227** or later.
+> Requires Home Assistant **2026.10.0b0** or later.
 
 > Source of truth — see [한국어](../ko/index.md) for the Korean translation (may lag).
 
