@@ -1,6 +1,6 @@
 # 네이버 지도 — Home Assistant 통합
 
-> Home Assistant **2026.10.0.dev202609290227** 이상이 필요합니다.
+> Home Assistant **2026.10.0b0** 이상이 필요합니다.
 
 > 영어 문서가 원본입니다 — [English](../en/index.md).
 
