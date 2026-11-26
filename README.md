@@ -26,6 +26,7 @@ Naver Map for Home Assistant — **place search**, **nearby search**, **geocodin
 - **Assist / AI tool support** — the same actions are exposed as an LLM tool API for AI-backed conversation agents, with visual result cards.
 - **Korean and English** UI translations.
 
+<!-- ha-marketplace:exclude-start -->
 ## Installation (HACS)
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=saya6k&repository=ha-naver-map&category=integration)
@@ -33,14 +34,16 @@ Naver Map for Home Assistant — **place search**, **nearby search**, **geocodin
 1. HACS → search for **Naver Map**.
 2. Install it.
 3. Restart Home Assistant.
-4. Settings → Devices & Services → **Add integration** → search "Naver Map".
-5. Enter both credential pairs (see [Configuration](#configuration)). Each pair is validated with one call.
 
 ## Manual installation
 
 Copy `custom_components/naver_map/` into your HA config's `custom_components/` folder and restart.
+<!-- ha-marketplace:exclude-end -->
 
 ## Configuration
+
+1. Settings → Devices & Services → **Add integration** → search "Naver Map".
+2. Enter both credential pairs (see [Configuration](#configuration)). Each pair is validated with one call.
 
 The config flow asks for one key pair from NAVER Cloud Platform. Only one entry is supported; change the keys later with **Reconfigure**.
 
@@ -228,6 +231,7 @@ MCP clients can also reach the API directly at `/api/mcp/naver_map` (requires an
 - **Route panel**: every route change in car mode calls Directions 5, a paid NCP API; marker drags are debounced, and nothing is looked up automatically. The panel loads Home Assistant's map component through frontend internals when its URL is opened directly, so a frontend update can break it; it then shows a notice instead of the map.
 - **No map-tile replacement** — see the note near the top.
 
+<!-- ha-marketplace:exclude-start -->
 ## Development
 
 A devcontainer is provided for testing against a real Home Assistant install. Open the folder in VS Code with the Dev Containers extension and run:
@@ -237,6 +241,7 @@ scripts/develop
 ```
 
 HA binds port 8123 inside the container, whose hostname is `ha-naver-map-dev` so it's distinguishable from any production HA on the host network. Run the lint + test suite with `scripts/test`.
+<!-- ha-marketplace:exclude-end -->
 
 ## License
 
